@@ -29,6 +29,15 @@ pipeline {
                 sh 'mvn package'
             }
         }
+
+        stage('Deploy') {
+            steps {
+                // Run the Spring Boot application
+                sh 'nohup java -jar target/DempApplication-0.0.1-SNAPSHOT.jar > app.log 2>&1 &'
+                sh 'sleep 5'
+                sh 'echo "Application started. Check app.log for logs"'
+            }
+        }
     }
 
     post {
