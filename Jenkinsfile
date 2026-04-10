@@ -1,53 +1,95 @@
 pipeline {
     agent any
 
+    tools {
+        maven 'Maven'   // Make sure this is configured in Jenkins
+    }
+
+    environment {
+        APP_NAME = 'DempApplication'
+        JAR_FILE = 'target/DempApplication-0.0.1-SNAPSHOT.jar'
+    }
+
     stages {
+
         stage('Checkout') {
             steps {
-                // Checkout code from SCM
                 checkout scm
             }
         }
 
-        stage('Build') {
+        stage('Build & Test') {
             steps {
-                // Compile the code
-                sh 'mvn clean compile'
+                sh 'mvn clean install'
             }
         }
 
-        stage('Test') {
+        stage('Verify JAR') {
             steps {
-                // Run tests
-                sh 'mvn test'
-            }
-        }
+                sh '''
+                echo "Checking target folder..."
+                ls -l target/
 
-        stage('Package') {
-            steps {
-                // Package the application
-                sh 'mvn package'
+                if [ ! -f "$JAR_FILE" ]; then
+                    echo "JAR file not found!"
+                    exit 1
+                fi
+
+                echo "JAR file exists: $JAR_FILE"
+                '''
             }
         }
 
         stage('Deploy') {
             steps {
-                // Run the Spring Boot application
-                sh 'nohup java -jar target/DempApplication-0.0.1-SNAPSHOT.jar > app.log 2>&1 &'
-                sh 'sleep 5'
-                sh 'echo "Application started. Check app.log for logs"'
+                sh '''
+                echo "Stopping old application if running..."
+                pkill -f $APP_NAME || true
+
+                echo "Starting new application..."
+                setsid java -jar $JAR_FILE > app.log 2>&1 < /dev/null &
+
+                sleep 10
+
+                echo "===== Application Logs ====="
+                if [ -f app.log ]; then
+                    cat app.log
+                else
+                    echo "app.log not found — application may have failed to start"
+                fi
+                '''
+            }
+        }
+
+        stage('Health Check') {
+            steps {
+                sh '''
+                echo "Checking if application is running on port 8888..."
+
+                if netstat -tulnp | grep 8888; then
+                    echo "Application is running successfully on port 8888"
+                else
+                    echo "Application is NOT running"
+                    exit 1
+                fi
+                '''
             }
         }
     }
 
     post {
         always {
-            // Archive test results
+            echo "Archiving test results..."
             junit 'target/surefire-reports/*.xml'
         }
+
         success {
-            // Archive the jar
+            echo "Archiving JAR..."
             archiveArtifacts artifacts: 'target/*.jar', fingerprint: true
+        }
+
+        failure {
+            echo "Build failed. Check logs above."
         }
     }
 }
