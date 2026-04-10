@@ -64,17 +64,20 @@ pipeline {
         stage('Health Check') {
             steps {
                 sh '''
-                echo "Checking if application is running on port 8888..."
+                echo "Checking application via HTTP..."
 
-                if netstat -tulnp | grep 8888; then
-                    echo "Application is running successfully on port 8888"
+                sleep 5
+
+                if curl -s http://localhost:8888 > /dev/null; then
+                    echo "Application is running successfully"
                 else
-                    echo "Application is NOT running"
+                    echo "Application is NOT reachable"
                     exit 1
                 fi
                 '''
             }
         }
+
     }
 
     post {
