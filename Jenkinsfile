@@ -8,6 +8,7 @@ pipeline {
 
     environment {
         TOMCAT_WEBAPPS = "C:\\Program Files\\Apache Software Foundation\\Tomcat 11.0\\webapps"
+        JAVA_HOME = '/usr/lib/jvm/java-17-openjdk-amd64'
     }
 
     stages {
@@ -53,8 +54,6 @@ pipeline {
             echo 'Build Failed!'
         }
     }
-    environment {
-        JAVA_HOME = '/usr/lib/jvm/java-17-openjdk-amd64'
-    }
+
 
 }
