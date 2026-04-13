@@ -2,103 +2,55 @@ pipeline {
     agent any
 
     tools {
-        maven 'Maven'   // Make sure this is configured in Jenkins
+        maven 'Maven3'
+        jdk 'JDK17'
     }
 
     environment {
-        APP_NAME = 'DempApplication'
-        JAR_FILE = 'target/DempApplication-0.0.1-SNAPSHOT.jar'
+        TOMCAT_WEBAPPS = "C:\Program Files\Apache Software Foundation\Tomcat 11.0\webapps"
     }
 
     stages {
 
-        stage('Checkout') {
+        stage('Checkout Code') {
             steps {
-                checkout scm
+                git 'https://github.com/rajkumarm23/SpringbootDemoApp.git'
             }
         }
 
-        stage('Build & Test') {
+        stage('Build') {
             steps {
-                sh 'mvn clean install'
+                bat 'mvn clean package'
             }
         }
 
-        stage('Verify JAR') {
+        stage('Test Report') {
             steps {
-                sh '''
-                echo "Checking target folder..."
-                ls -l target/
-
-                if [ ! -f "$JAR_FILE" ]; then
-                    echo "JAR file not found!"
-                    exit 1
-                fi
-
-                echo "JAR file exists: $JAR_FILE"
-                '''
+                junit 'target/surefire-reports/*.xml'
             }
         }
 
-        stage('Deploy') {
+        stage('Archive Artifact') {
             steps {
-                sh '''
-                echo "Stopping old application if running..."
-                pkill -f $APP_NAME || true
-
-                echo "Starting new application..."
-                setsid java -jar $JAR_FILE > app.log 2>&1 < /dev/null &
-
-                sleep 10
-
-                echo "===== Application Logs ====="
-                if [ -f app.log ]; then
-                    cat app.log
-                else
-                    echo "app.log not found — application may have failed to start"
-                fi
-                '''
+                archiveArtifacts artifacts: 'target/*.war', fingerprint: true
             }
         }
 
-        stage('Health Check') {
+        stage('Deploy to Tomcat') {
             steps {
-                sh '''
-                echo "Checking application via HTTP..."
-
-                sleep 5
-
-                if curl -s http://localhost:8888 > /dev/null; then
-                    echo "Application is running successfully"
-                else
-                    echo "Application is NOT reachable"
-                    exit 1
-                fi
-                '''
+                bat """
+                copy target\\Demo_App.war %TOMCAT_WEBAPPS%
+                """
             }
         }
-
     }
 
     post {
-        always {
-            echo "Archiving test results..."
-            junit 'target/surefire-reports/*.xml'
-        }
-
         success {
-            echo "Archiving JAR..."
-            archiveArtifacts artifacts: 'target/*.jar', fingerprint: true
+            echo 'Deployment Successful!'
         }
-
         failure {
-            echo "Build failed. Check logs above."
+            echo 'Build Failed!'
         }
     }
-    post {
-        always {
-            junit '**/target/surefire-reports/*.xml'
-        }
-    }
-
 }
