@@ -7,7 +7,7 @@ pipeline {
     }
 
     environment {
-        TOMCAT_WEBAPPS = "C:\Program Files\Apache Software Foundation\Tomcat 11.0\webapps"
+        TOMCAT_WEBAPPS = "C:\\Program Files\\Apache Software Foundation\\Tomcat 11.0\\webapps"
     }
 
     stages {
