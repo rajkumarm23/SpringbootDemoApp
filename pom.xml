@@ -11,7 +11,7 @@
 	<groupId>com.accenture</groupId>
 	<artifactId>DempApplication</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<packaging>jar</packaging>
+	<packaging>war</packaging>
 	<name/>
 	<description/>
 	<url/>
@@ -39,6 +39,7 @@
 	<dependency>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-tomcat</artifactId>
+        <scope>provided</scope>
 	</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
