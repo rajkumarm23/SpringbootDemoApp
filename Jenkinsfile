@@ -95,4 +95,10 @@ pipeline {
             echo "Build failed. Check logs above."
         }
     }
+    post {
+        always {
+            junit '**/target/surefire-reports/*.xml'
+        }
+    }
+
 }
