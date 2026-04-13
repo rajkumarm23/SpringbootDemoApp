@@ -9,9 +9,18 @@ pipeline {
     environment {
         TOMCAT_WEBAPPS = "C:\\Program Files\\Apache Software Foundation\\Tomcat 11.0\\webapps"
         JAVA_HOME = '/usr/lib/jvm/java-17-openjdk-amd64'
+        PATH = "/usr/lib/jvm/java-17-openjdk-amd64/bin:${env.PATH}"
     }
 
     stages {
+
+        stage('Check Java') {
+                    steps {
+                        sh 'echo JAVA_HOME=$JAVA_HOME'
+                        sh 'java -version'
+                    }
+                }
+
 
         stage('Checkout Code') {
             steps {
